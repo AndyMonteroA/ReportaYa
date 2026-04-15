@@ -1177,6 +1177,7 @@
         window.restartAll = restartAll;
         window.skipPermissions = skipPermissions;
         window.requestAllPermissions = requestAllPermissions;
+        window.toggleNextButton = toggleNextButton;
 
 
         function showToast(msg) {
@@ -1199,7 +1200,7 @@
             photoPreview = null;
             coords = null;
             document.getElementById("btn-submit").disabled = false;
-            document.getElementById("btn-submit").innerHTML = '<i data-lucide="send"></i> Enviar reporte';
+            document.getElementById("btn-submit").innerHTML = '<i data-lucide="send"></i> Enviar Datos';
             lucide.createIcons({ nodes: [document.getElementById("btn-submit")] });
             document.getElementById("step3").style.display = "none";
             document.getElementById("step1").style.display = "block";
