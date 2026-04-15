@@ -899,6 +899,7 @@
 
         let map, heatLayer;
         let currentFilter = 'all';
+        let cachedReports = [];
 
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', () => {
@@ -959,20 +960,30 @@
 
         function initDashboard() {
             initMap();
-            // Suscribirse a cambios en tiempo real (Firebase o Local)
             ReportaData.onReportsUpdate((reports) => {
                 console.log("Datos recibidos en el Dashboard:", reports);
-                updateDashboardWithData(reports);
+                cachedReports = reports;
+                loadDashboard();
             });
+        }
+
+        function loadDashboard() {
+            updateDashboardWithData(cachedReports);
         }
 
         // Función unificada para actualizar todo el dashboard
         function updateDashboardWithData(reports) {
-            updateStats(reports);
-            updateHeatmap(reports);
-            updateBreakdown(reports);
-            updateActivity(reports);
-            updateTable(reports);
+            // Aplicar el filtro actual antes de repartir a otros componentes
+            let filtered = reports;
+            if (currentFilter !== 'all') {
+                filtered = reports.filter(r => r.type === currentFilter);
+            }
+            
+            updateStats(filtered);
+            updateHeatmap(filtered); // updateHeatmap ya tiene lógica interna pero mejor pasarle el filtrado
+            updateBreakdown(reports); // Breakdown siempre muestra todo el total para comparar
+            updateActivity(filtered);
+            updateTable(filtered);
             lucide.createIcons();
         }
 
