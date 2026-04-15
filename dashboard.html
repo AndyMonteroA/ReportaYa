@@ -582,7 +582,10 @@
             .sidebar > * { min-width: unset; }
             .filter-pills { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
             .map-toolbar { padding: 12px 14px; }
+            .header-btn { padding: 10px; }
             .header-btn span { display: none; }
+            /* Ocultar botón de Nuevo Reporte en Dashboard móvil si causa problemas visuales */
+            .header-btn.accent { display: none; }
         }
         @media (max-width: 374px) {
             .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
