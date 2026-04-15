@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReportaYa - Temporada Invernal</title>
+    <meta name="description" content="Reporta incidencias de temporada invernal de forma rápida y geolocalizada.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 0;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+            background: #0a0f1e;
+            color: #e2e8f0;
+            min-height: 100vh;
+            min-height: 100dvh;
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* ===== MODAL DE PERMISOS ===== */
+        .permissions-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 8, 22, 0.92);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.4s ease;
+        }
+        .permissions-overlay.hidden {
+            display: none;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .permissions-card {
+            background: linear-gradient(145deg, #151d35, #1a2440);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 24px;
+            padding: 40px 32px;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 80px rgba(56, 189, 248, 0.06);
+            animation: slideUp 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px) scale(0.96); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .permissions-icon-wrap {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+        }
+        .permissions-icon-wrap i[data-lucide] {
+            width: 36px;
+            height: 36px;
+            color: #38bdf8;
+        }
+        .permissions-card h2 {
+            font-size: 1.5em;
+            font-weight: 700;
+            margin: 0 0 8px;
+            color: #f1f5f9;
+        }
+        .permissions-card p {
+            color: #94a3b8;
+            font-size: 0.95em;
+            margin: 0 0 28px;
+            line-height: 1.6;
+        }
+        .perm-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid #1e293b;
+            border-radius: 14px;
+            padding: 16px;
+            margin-bottom: 12px;
+            text-align: left;
+            transition: border-color 0.3s;
+        }
+        .perm-item.granted {
+            border-color: rgba(34, 197, 94, 0.4);
+        }
+        .perm-item.denied {
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+        .perm-icon-circle {
+            width: 44px;
+            height: 44px;
+            min-width: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(56, 189, 248, 0.1);
+        }
+        .perm-icon-circle i[data-lucide] {
+            width: 22px;
+            height: 22px;
+            color: #38bdf8;
+        }
+        .perm-item.granted .perm-icon-circle {
+            background: rgba(34, 197, 94, 0.15);
+        }
+        .perm-item.granted .perm-icon-circle i[data-lucide] {
+            color: #22c55e;
+        }
+        .perm-item.denied .perm-icon-circle {
+            background: rgba(239, 68, 68, 0.15);
+        }
+        .perm-item.denied .perm-icon-circle i[data-lucide] {
+            color: #ef4444;
+        }
+        .perm-detail h3 {
+            margin: 0;
+            font-size: 1em;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        .perm-detail span {
+            font-size: 0.82em;
+            color: #64748b;
+        }
+        .perm-status-badge {
+            margin-left: auto;
+            font-size: 0.78em;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+        }
+        .perm-status-badge.pending {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+        }
+        .perm-status-badge.ok {
+            background: rgba(34, 197, 94, 0.15);
+            color: #22c55e;
+        }
+        .perm-status-badge.fail {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+        .btn-permissions {
+            width: 100%;
+            padding: 16px;
+            margin-top: 20px;
+            font-size: 1.1em;
+            font-weight: 700;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-permissions:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(6, 182, 212, 0.35);
+        }
+        .btn-permissions:active {
+            transform: translateY(0);
+        }
+        .btn-permissions i[data-lucide] {
+            width: 20px;
+            height: 20px;
+        }
+        .btn-skip {
+            width: 100%;
+            padding: 14px;
+            margin-top: 8px;
+            font-size: 0.95em;
+            font-weight: 500;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            background: transparent;
+            color: #64748b;
+            transition: color 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+        .btn-skip:hover {
+            color: #94a3b8;
+        }
+
+        /* ===== CABECERA ===== */
+        header {
+            background: linear-gradient(180deg, #111827, #0a0f1e);
+            padding: 28px 16px 24px;
+            text-align: center;
+            border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+            position: relative;
+        }
+        .nav-dashboard {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1px solid var(--border, #1e293b);
+            border-radius: 10px;
+            background: rgba(17, 24, 39, 0.8);
+            color: #94a3b8;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.82em;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+            backdrop-filter: blur(8px);
+        }
+        .nav-dashboard:hover {
+            background: rgba(6, 182, 212, 0.1);
+            border-color: rgba(6, 182, 212, 0.3);
+            color: #e2e8f0;
+        }
+        .nav-dashboard i[data-lucide] {
+            width: 16px;
+            height: 16px;
+        }
+        .header-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 4px;
+        }
+        .header-logo-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
+        }
+        .header-logo-icon i[data-lucide] {
+            width: 24px;
+            height: 24px;
+            color: white;
+        }
+        h1 {
+            margin: 0;
+            font-size: 1.75em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e2e8f0, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .app-badge {
+            display: inline-block;
+            font-size: 0.7em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 8px;
+            margin-left: 4px;
+            vertical-align: middle;
+            -webkit-text-fill-color: white;
+        }
+        .subtitle {
+            font-size: 0.92em;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .progress {
+            height: 6px;
+            background: #1e293b;
+            margin: 18px auto 0;
+            max-width: 360px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(to right, #06b6d4, #3b82f6);
+            width: 0%;
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            border-radius: 3px;
+        }
+
+        .container {
+            max-width: 840px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        h2 {
+            font-size: 1.55em;
+            color: #cbd5e1;
+            margin: 28px 0 20px;
+            text-align: center;
+            font-weight: 700;
+        }
+
+        /* ===== TARJETAS PASO 1 ===== */
+        .option-card {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(145deg, #151d35, #131a2e);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 14px 0;
+            border: 1px solid #1e293b;
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            user-select: none;
+            min-height: 72px;
+        }
+        .option-card * {
+            pointer-events: none;
+        }
+        .option-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.05), rgba(59, 130, 246, 0.05));
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .option-card:hover::before, .option-card.checked::before {
+            opacity: 1;
+        }
+        .option-card:hover, .option-card.checked {
+            border-color: rgba(6, 182, 212, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(6, 182, 212, 0.1);
+        }
+        .option-card.checked {
+            border-color: #06b6d4;
+        }
+        .icon-wrap {
+            width: 52px;
+            height: 52px;
+            min-width: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            position: relative;
+            z-index: 1;
+        }
+        .icon-wrap i[data-lucide] {
+            width: 28px;
+            height: 28px;
+        }
+        /* Colores individuales de iconos */
+        .icon-inundacion { background: rgba(56, 189, 248, 0.15); }
+        .icon-inundacion i[data-lucide] { color: #38bdf8; }
+        .icon-deslizamiento { background: rgba(251, 191, 36, 0.15); }
+        .icon-deslizamiento i[data-lucide] { color: #fbbf24; }
+        .icon-socavamiento { background: rgba(168, 85, 247, 0.15); }
+        .icon-socavamiento i[data-lucide] { color: #a855f7; }
+        .icon-colapso { background: rgba(239, 68, 68, 0.15); }
+        .icon-colapso i[data-lucide] { color: #ef4444; }
+        .icon-vendaval { background: rgba(34, 197, 94, 0.15); }
+        .icon-vendaval i[data-lucide] { color: #22c55e; }
+        .icon-aluvion { background: rgba(249, 115, 22, 0.15); }
+        .icon-aluvion i[data-lucide] { color: #f97316; }
+
+        .card-text {
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+        .label-text {
+            font-size: 1.1em;
+            font-weight: 600;
+            display: block;
+        }
+        .label-sub {
+            font-size: 0.82em;
+            color: #64748b;
+            font-weight: 400;
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* ===== CASILLAS PASO 2 ===== */
+        .check-item {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(145deg, #151d35, #131a2e);
+            border-radius: 14px;
+            padding: 16px 18px;
+            margin: 10px 0;
+            border: 1px solid #1e293b;
+            cursor: pointer;
+            transition: all 0.25s;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 56px;
+        }
+        .check-item:hover {
+            border-color: rgba(6, 182, 212, 0.4);
+            background: rgba(21, 29, 53, 0.9);
+        }
+        .check-item input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            min-width: 24px;
+            border: 2px solid #475569;
+            border-radius: 7px;
+            margin-right: 14px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.2s;
+            background: transparent;
+        }
+        .check-item input[type="checkbox"]:checked {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            border-color: transparent;
+        }
+        .check-item input[type="checkbox"]:checked::after {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 3px;
+            width: 6px;
+            height: 11px;
+            border: solid white;
+            border-width: 0 2.5px 2.5px 0;
+            transform: rotate(45deg);
+        }
+        .check-item label {
+            font-size: 1.05em;
+            flex: 1;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* ===== BOTONES ===== */
+        button {
+            width: 100%;
+            padding: 16px;
+            margin: 10px 0;
+            font-size: 1.1em;
+            font-weight: 700;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-main {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.25);
+            margin-top: 20px;
+        }
+        .btn-main:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 28px rgba(6, 182, 212, 0.35);
+        }
+        .btn-main:disabled {
+            background: #1e293b;
+            color: #475569;
+            opacity: 0.7;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .btn-back {
+            background: rgba(30, 41, 59, 0.6);
+            color: #94a3b8;
+            border: 1px solid #1e293b;
+        }
+        .btn-back:hover {
+            background: rgba(30, 41, 59, 0.9);
+            color: #cbd5e1;
+        }
+        .btn-main i[data-lucide], .btn-back i[data-lucide] {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* ===== PASO 3 ===== */
+        #summary {
+            background: linear-gradient(145deg, #151d35, #131a2e);
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            line-height: 1.8;
+        }
+        #summary .summary-icon {
+            display: inline-flex;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        #summary .summary-icon i[data-lucide] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .file-upload-area {
+            background: linear-gradient(145deg, #151d35, #131a2e);
+            border: 2px dashed #1e293b;
+            border-radius: 16px;
+            padding: 28px 20px;
+            text-align: center;
+            margin: 16px 0;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+        .file-upload-area:hover {
+            border-color: rgba(6, 182, 212, 0.4);
+            background: rgba(21, 29, 53, 0.9);
+        }
+        .file-upload-area i[data-lucide] {
+            width: 36px;
+            height: 36px;
+            color: #475569;
+            margin-bottom: 8px;
+        }
+        .file-upload-area span {
+            display: block;
+            color: #64748b;
+            font-size: 0.95em;
+        }
+        .file-upload-area input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        #img-preview img {
+            width: 100%;
+            border-radius: 16px;
+            margin-top: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .info-text {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9em;
+            margin: 10px 0;
+        }
+        .location-status {
+            text-align: center;
+            font-weight: 600;
+            margin: 16px 0;
+            padding: 14px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .location-status i[data-lucide] {
+            width: 20px;
+            height: 20px;
+        }
+        .success {
+            background: rgba(34, 197, 94, 0.1);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.2);
+        }
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+        .pending-loc {
+            background: rgba(56, 189, 248, 0.1);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        /* ===== NOTIFICACIÓN (TOAST) ===== */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            color: white;
+            padding: 16px 28px;
+            border-radius: 14px;
+            font-weight: 600;
+            font-size: 1em;
+            box-shadow: 0 8px 32px rgba(6, 182, 212, 0.3);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+        .toast i[data-lucide] {
+            width: 22px;
+            height: 22px;
+        }
+
+        /* ===== DISEÑO RESPONSIVO ===== */
+
+        /* Teléfonos extra pequeños (320px - 374px) */
+        @media (max-width: 374px) {
+            body { font-size: 14px; }
+            header { padding: 16px 10px 14px; }
+            h1 { font-size: 1.3em; }
+            .app-badge { font-size: 0.65em; padding: 2px 8px; }
+            h2 { font-size: 1.2em; margin: 20px 0 14px; }
+            .container { padding: 12px 10px; }
+            .option-card { padding: 14px 12px; margin: 8px 0; border-radius: 14px; }
+            .check-item { padding: 12px; margin: 6px 0; border-radius: 12px; }
+            .icon-wrap { width: 40px; height: 40px; min-width: 40px; border-radius: 10px; margin-right: 12px; }
+            .icon-wrap i[data-lucide] { width: 20px; height: 20px; }
+            .label-text { font-size: 0.95em; }
+            .label-sub { font-size: 0.75em; }
+            button { padding: 16px; font-size: 1.05em; border-radius: 12px; }
+            .progress { max-width: 200px; }
+            .permissions-card { padding: 24px 16px; border-radius: 20px; }
+            .permissions-card h2 { font-size: 1.3em; }
+            .perm-item { padding: 12px; gap: 12px; }
+            .header-logo-icon { width: 36px; height: 36px; border-radius: 10px; }
+            .header-logo-icon i[data-lucide] { width: 20px; height: 20px; }
+            .header-logo { gap: 8px; }
+        }
+
+        /* Teléfonos pequeños (375px - 600px) */
+        @media (min-width: 375px) and (max-width: 600px) {
+            body { font-size: 15px; }
+            header { padding: 22px 12px 20px; }
+            h1 { font-size: 1.5em; }
+            h2 { font-size: 1.35em; margin: 24px 0 16px; }
+            .container { padding: 16px 12px; }
+            .option-card { padding: 16px; margin: 10px 0; }
+            .check-item { padding: 14px; margin: 8px 0; }
+            .icon-wrap { width: 44px; height: 44px; min-width: 44px; border-radius: 12px; }
+            .icon-wrap i[data-lucide] { width: 22px; height: 22px; }
+            .label-text { font-size: 1em; }
+            button { padding: 18px; font-size: 1.15em; }
+            .progress { max-width: 260px; }
+            .permissions-card { padding: 28px 20px; }
+        }
+
+        /* Tablets / teléfonos grandes (601px - 900px) */
+        @media (min-width: 601px) and (max-width: 900px) {
+            .container { padding: 24px 20px; }
+            h1 { font-size: 1.9em; }
+            h2 { font-size: 1.6em; }
+            .option-card, .check-item { padding: 22px; margin: 14px 0; }
+            button { padding: 20px; font-size: 1.2em; }
+        }
+
+        /* Escritorio (901px+) */
+        @media (min-width: 901px) {
+            .container { max-width: 900px; padding: 32px 40px; }
+            h1 { font-size: 2em; }
+            h2 { font-size: 1.75em; }
+            .option-card, .check-item { max-width: 700px; margin: 16px auto; }
+            button { max-width: 700px; margin-left: auto; margin-right: auto; }
+        }
+
+        /* Teléfonos en horizontal (Landscape) */
+        @media (max-height: 500px) and (orientation: landscape) {
+            header { padding: 12px 16px 10px; }
+            .header-logo-icon { width: 32px; height: 32px; }
+            h1 { font-size: 1.3em; }
+            .subtitle { font-size: 0.8em; margin-top: 2px; }
+            .progress { margin-top: 8px; }
+            h2 { font-size: 1.2em; margin: 14px 0 10px; }
+            .container { padding: 10px 16px; }
+            .option-card { padding: 12px 14px; margin: 6px 0; min-height: 56px; }
+            .check-item { padding: 10px 14px; margin: 4px 0; min-height: 44px; }
+            button { padding: 14px; }
+            .permissions-card { padding: 20px 16px; }
+            .permissions-card h2 { font-size: 1.2em; margin-bottom: 4px; }
+            .permissions-card p { font-size: 0.85em; margin-bottom: 16px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== PERMISSIONS MODAL ===== -->
+    <div id="permissions-overlay" class="permissions-overlay">
+        <div class="permissions-card">
+            <div class="permissions-icon-wrap">
+                <i data-lucide="shield-check"></i>
+            </div>
+            <h2>Permisos necesarios</h2>
+            <p>Para brindarte un mejor servicio y geolocalizar tu reporte, necesitamos acceso a lo siguiente:</p>
+
+            <div id="perm-location" class="perm-item">
+                <div class="perm-icon-circle">
+                    <i data-lucide="map-pin"></i>
+                </div>
+                <div class="perm-detail">
+                    <h3>Ubicación</h3>
+                    <span>Para geolocalizar el incidente</span>
+                </div>
+                <span id="perm-loc-badge" class="perm-status-badge pending">Pendiente</span>
+            </div>
+
+            <div id="perm-camera" class="perm-item">
+                <div class="perm-icon-circle">
+                    <i data-lucide="camera"></i>
+                </div>
+                <div class="perm-detail">
+                    <h3>Cámara</h3>
+                    <span>Para adjuntar evidencia fotográfica</span>
+                </div>
+                <span id="perm-cam-badge" class="perm-status-badge pending">Pendiente</span>
+            </div>
+
+            <button class="btn-permissions" id="btn-grant-perms" onclick="requestAllPermissions()">
+                <i data-lucide="check-circle"></i>
+                Conceder permisos
+            </button>
+            <button class="btn-skip" onclick="skipPermissions()">Continuar sin permisos</button>
+        </div>
+    </div>
+
+    <!-- ===== HEADER ===== -->
+    <header>
+        <a href="dashboard.html" class="nav-dashboard" title="Centro de Monitoreo">
+            <i data-lucide="activity"></i>
+            <span>Monitoreo</span>
+        </a>
+        <div class="header-logo">
+            <div class="header-logo-icon">
+                <i data-lucide="shield-alert"></i>
+            </div>
+            <h1>ReportaYa <span class="app-badge">Invernal</span></h1>
+        </div>
+        <p class="subtitle">Reporta incidencias de temporada invernal</p>
+        <div class="progress"><div id="prog-bar" class="progress-bar"></div></div>
+    </header>
+
+    <div class="container">
+        <!-- PASO 1 -->
+        <section id="step1">
+            <h2>¿Qué tipo de emergencia es?</h2>
+            <div class="option-card" onclick="selectIncident(this, 'inundacion')" id="card-inundacion">
+                <input type="radio" name="incidencia" value="inundacion" hidden>
+                <div class="icon-wrap icon-inundacion">
+                    <i data-lucide="waves"></i>
+                </div>
+                <div class="card-text">
+                    <span class="label-text">Inundación</span>
+                    <span class="label-sub">Desbordamiento de agua</span>
+                </div>
+            </div>
+            <div class="option-card" onclick="selectIncident(this, 'deslizamiento')" id="card-deslizamiento">
+                <input type="radio" name="incidencia" value="deslizamiento" hidden>
+                <div class="icon-wrap icon-deslizamiento">
+                    <i data-lucide="mountain-snow"></i>
+                </div>
+                <div class="card-text">
+                    <span class="label-text">Deslizamiento / Derrumbe</span>
+                    <span class="label-sub">Tierra o rocas desprendidas</span>
+                </div>
+            </div>
+            <div class="option-card" onclick="selectIncident(this, 'socavamiento')" id="card-socavamiento">
+                <input type="radio" name="incidencia" value="socavamiento" hidden>
+                <div class="icon-wrap icon-socavamiento">
+                    <i data-lucide="circle-off"></i>
+                </div>
+                <div class="card-text">
+                    <span class="label-text">Socavamiento</span>
+                    <span class="label-sub">Hundimiento del suelo o vía</span>
+                </div>
+            </div>
+            <div class="option-card" onclick="selectIncident(this, 'colapso')" id="card-colapso">
+                <input type="radio" name="incidencia" value="colapso" hidden>
+                <div class="icon-wrap icon-colapso">
+                    <i data-lucide="building-2"></i>
+                </div>
+                <div class="card-text">
+                    <span class="label-text">Colapso estructural</span>
+                    <span class="label-sub">Daño en edificaciones</span>
+                </div>
+            </div>
+            <div class="option-card" onclick="selectIncident(this, 'vendaval')" id="card-vendaval">
+                <input type="radio" name="incidencia" value="vendaval" hidden>
+                <div class="icon-wrap icon-vendaval">
+                    <i data-lucide="wind"></i>
+                </div>
+                <div class="card-text">
+                    <span class="label-text">Vendaval</span>
+                    <span class="label-sub">Vientos fuertes y destructivos</span>
+                </div>
+            </div>
+            <div class="option-card" onclick="selectIncident(this, 'aluvion')" id="card-aluvion">
+                <input type="radio" name="incidencia" value="aluvion" hidden>
+                <div class="icon-wrap icon-aluvion">
+                    <i data-lucide="cloud-rain-wind"></i>
+                </div>
+                <div class="card-text">
+                    <span class="label-text">Aluvión</span>
+                    <span class="label-sub">Flujo de lodo y escombros</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- PASO 2 -->
+        <section id="step2" style="display:none;">
+            <h2>¿Qué observas exactamente?</h2>
+            <div id="checks-container"></div>
+            <p class="info-text">Marca todo lo que observes (mínimo uno)</p>
+            <button id="btn-next" class="btn-main" disabled onclick="goToResults()">
+                Siguiente
+                <i data-lucide="arrow-right"></i>
+            </button>
+            <button class="btn-back" onclick="backToStep1()">
+                <i data-lucide="arrow-left"></i>
+                Volver
+            </button>
+        </section>
+
+        <!-- PASO 3 -->
+        <section id="step3" style="display:none;">
+            <h2>Reporte listo</h2>
+            <div id="summary"></div>
+
+            <div class="file-upload-area" id="upload-area">
+                <i data-lucide="camera"></i>
+                <span>Toca para adjuntar una foto (opcional)</span>
+                <input type="file" id="foto" accept="image/*" capture="environment" onchange="showPreview()">
+            </div>
+            <div id="img-preview"></div>
+
+            <div id="gps-info" class="location-status pending-loc">
+                <i data-lucide="loader-2"></i>
+                Capturando ubicación...
+            </div>
+
+            <button class="btn-main" onclick="submitReport()" id="btn-submit">
+                <i data-lucide="send"></i>
+                Enviar reporte
+            </button>
+            <button class="btn-back" onclick="restartAll()">
+                <i data-lucide="rotate-ccw"></i>
+                Nuevo reporte
+            </button>
+        </section>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast">
+        <i data-lucide="check-circle"></i>
+        <span id="toast-msg">Reporte enviado con éxito</span>
+    </div>
+
+    <!-- ===== SCRIPTS ===== -->
+    <script type="module">
+        import { ReportaData } from './database.js';
+
+        // ===== INICIALIZAR ICONOS =====
+        document.addEventListener("DOMContentLoaded", () => {
+            lucide.createIcons();
+            checkFirstVisit();
+        });
+
+        // ===== SISTEMA DE PERMISOS =====
+        function checkFirstVisit() {
+            const hasVisited = localStorage.getItem('reportaya_perms_asked');
+            if (hasVisited) {
+                document.getElementById('permissions-overlay').classList.add('hidden');
+            }
+        }
+
+        async function requestAllPermissions() {
+            const btn = document.getElementById('btn-grant-perms');
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2"></i> Solicitando...';
+            lucide.createIcons({ nodes: [btn] });
+
+            // Solicitar Ubicación
+            try {
+                const pos = await new Promise((resolve, reject) => {
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 });
+                });
+                updatePermBadge('perm-location', 'perm-loc-badge', true, 'Concedido');
+            } catch (e) {
+                updatePermBadge('perm-location', 'perm-loc-badge', false, 'Denegado');
+            }
+
+            // Solicitar Cámara
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream.getTracks().forEach(t => t.stop()); // Liberar la cámara inmediatamente
+                updatePermBadge('perm-camera', 'perm-cam-badge', true, 'Concedido');
+            } catch (e) {
+                updatePermBadge('perm-camera', 'perm-cam-badge', false, 'Denegado');
+            }
+
+            localStorage.setItem('reportaya_perms_asked', 'true');
+
+            btn.innerHTML = '<i data-lucide="check-circle"></i> ¡Listo!';
+            btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+            lucide.createIcons({ nodes: [btn] });
+
+            setTimeout(() => {
+                document.getElementById('permissions-overlay').classList.add('hidden');
+            }, 1200);
+        }
+
+        function updatePermBadge(itemId, badgeId, success, text) {
+            const item = document.getElementById(itemId);
+            const badge = document.getElementById(badgeId);
+            item.classList.remove('granted', 'denied');
+            item.classList.add(success ? 'granted' : 'denied');
+            badge.className = 'perm-status-badge ' + (success ? 'ok' : 'fail');
+            badge.textContent = text;
+        }
+
+        function skipPermissions() {
+            localStorage.setItem('reportaya_perms_asked', 'true');
+            document.getElementById('permissions-overlay').classList.add('hidden');
+        }
+
+        // ===== DATOS DE INCIDENCIAS =====
+        const incidents = {
+            inundacion: {
+                icon: 'waves',
+                color: '#38bdf8',
+                efectos: ["Agua en casas o calles", "Ríos/esteros desbordados", "Personas atrapadas", "Vehículos dañados", "Caminos inundados"],
+                desc: "Inundación",
+                action: "Evacuar a zonas altas, no cruzar agua, llamar 911."
+            },
+            deslizamiento: {
+                icon: 'mountain-snow',
+                color: '#fbbf24',
+                efectos: ["Tierra o piedras cayendo", "Grietas en el suelo", "Árboles/postes caídos", "Vía bloqueada"],
+                desc: "Deslizamiento",
+                action: "Evacuar ya, no acercarse, ECU911."
+            },
+            socavamiento: {
+                icon: 'circle-off',
+                color: '#a855f7',
+                efectos: ["Hueco grande en calle", "Asfalto hundido", "Vehículo atrapado"],
+                desc: "Socavamiento",
+                action: "Señalizar, no acercarse, reportar vial/911."
+            },
+            colapso: {
+                icon: 'building-2',
+                color: '#ef4444',
+                efectos: ["Pared/techo agrietado", "Casa inclinada", "Personas bajo escombros"],
+                desc: "Colapso estructural",
+                action: "Salir inmediatamente, Bomberos/911."
+            },
+            vendaval: {
+                icon: 'wind',
+                color: '#22c55e',
+                efectos: ["Techos volados", "Árboles caídos", "Cortes de luz"],
+                desc: "Vendaval",
+                action: "Quedarse en casa segura, alejar de ventanas."
+            },
+            aluvion: {
+                icon: 'cloud-rain-wind',
+                color: '#f97316',
+                efectos: ["Lodo/piedras bajando rápido", "Arrastre de objetos", "Ruido fuerte"],
+                desc: "Aluvión",
+                action: "Subir a terreno alto YA."
+            }
+        };
+
+        let currentIncident = "";
+        let photoData = null;
+        let coords = null;
+
+        // ===== PASO 1 =====
+        function selectIncident(el, val) {
+            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('checked'));
+            el.classList.add('checked');
+            currentIncident = val;
+            setTimeout(() => loadEffects(), 250);
+        }
+
+        function loadEffects() {
+            const container = document.getElementById("checks-container");
+            container.innerHTML = "";
+            incidents[currentIncident].efectos.forEach((ef, i) => {
+                const item = document.createElement("div");
+                item.className = "check-item";
+                const uniqueId = `chk-${currentIncident}-${i}`;
+                item.innerHTML = `
+                    <input type="checkbox" value="${ef}" id="${uniqueId}" onchange="toggleNextButton()">
+                    <label for="${uniqueId}">${ef}</label>
+                `;
+                item.onclick = (e) => {
+                    if (e.target.tagName !== 'INPUT') {
+                        const cb = item.querySelector('input');
+                        cb.checked = !cb.checked;
+                        toggleNextButton();
+                    }
+                };
+                container.appendChild(item);
+            });
+            toggleNextButton();
+            document.getElementById("step1").style.display = "none";
+            document.getElementById("step2").style.display = "block";
+            setProgress(40);
+        }
+
+        function toggleNextButton() {
+            const anyChecked = document.querySelector("#checks-container input:checked");
+            document.getElementById("btn-next").disabled = !anyChecked;
+        }
+
+        // ===== PASO 2 → 3 =====
+        function goToResults() {
+            const selected = Array.from(document.querySelectorAll("#checks-container input:checked")).map(inp => inp.value);
+            const data = incidents[currentIncident];
+
+            let text = `<strong style="font-size:1.15em; color:${data.color}">${data.desc}</strong>`;
+            text += `<br><br><strong>Acción inmediata:</strong> ${data.action}`;
+            text += `<br><br><strong>Observado:</strong><br>`;
+            selected.forEach(s => { text += `• ${s}<br>`; });
+
+            document.getElementById("summary").innerHTML = text;
+            document.getElementById("step2").style.display = "none";
+            document.getElementById("step3").style.display = "block";
+            setProgress(100);
+            getLocation();
+            lucide.createIcons();
+        }
+
+        function setProgress(pct) {
+            document.getElementById("prog-bar").style.width = pct + "%";
+        }
+
+        // ===== UBICACIÓN =====
+        function getLocation() {
+            const el = document.getElementById("gps-info");
+            if (!navigator.geolocation) {
+                el.innerHTML = '<i data-lucide="x-circle"></i> GPS no disponible';
+                el.className = "location-status error";
+                lucide.createIcons({ nodes: [el] });
+                return;
+            }
+            el.innerHTML = '<i data-lucide="loader-2"></i> Capturando ubicación...';
+            el.className = "location-status pending-loc";
+            lucide.createIcons({ nodes: [el] });
+
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    coords = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
+                    el.innerHTML = `<i data-lucide="map-pin-check"></i> Ubicación capturada (${coords.lat}, ${coords.lng})`;
+                    el.className = "location-status success";
+                    lucide.createIcons({ nodes: [el] });
+                },
+                () => {
+                    el.innerHTML = '<i data-lucide="map-pin-off"></i> Ubicación denegada o no disponible';
+                    el.className = "location-status error";
+                    lucide.createIcons({ nodes: [el] });
+                },
+                { enableHighAccuracy: true, timeout: 15000 }
+            );
+        }
+
+        // ===== FOTO =====
+        function showPreview() {
+            const file = document.getElementById("foto").files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    photoData = e.target.result;
+                    document.getElementById("img-preview").innerHTML = `<img src="${photoData}" alt="Evidencia fotográfica">`;
+                    document.getElementById("upload-area").style.display = "none";
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // ===== ENVIAR REPORTE =====
+        async function submitReport() {
+            const effects = Array.from(document.querySelectorAll("#checks-container input:checked")).map(i => i.value);
+
+            // Construir objeto de reporte estructurado
+            const report = {
+                id: crypto.randomUUID(),
+                timestamp: new Date().toISOString(),
+                type: currentIncident,
+                typeLabel: incidents[currentIncident].desc,
+                effects: effects,
+                coords: coords ? { lat: parseFloat(coords.lat), lng: parseFloat(coords.lng) } : null,
+                hasPhoto: !!photoData
+            };
+
+            // Guardar usando la Capa de Servicio (Firebase + Local)
+            const result = await ReportaData.saveReport(report);
+
+            if (result.success) {
+                showToast("¡Reporte enviado con éxito!");
+            } else {
+                showToast("Guardado localmente (Pérdida de conexión)");
+            }
+
+            console.log("Resultado del guardado:", result);
+            setTimeout(() => restartAll(), 2500);
+        }
+
+        // Exponer funciones necesarias al objeto window para mantener compatibilidad con onclick
+        window.selectIncident = selectIncident;
+        window.goToResults = goToResults;
+        window.getLocation = getLocation;
+        window.showPreview = showPreview;
+        window.submitReport = submitReport;
+        window.backToStep1 = backToStep1;
+        window.restartAll = restartAll;
+        window.skipPermissions = skipPermissions;
+        window.startPermissionsFlow = startPermissionsFlow;
+
+
+        function showToast(msg) {
+            const toast = document.getElementById("toast");
+            document.getElementById("toast-msg").textContent = msg;
+            toast.classList.add("show");
+            setTimeout(() => toast.classList.remove("show"), 3000);
+        }
+
+        // ===== NAVEGACIÓN =====
+        function backToStep1() {
+            document.getElementById("step2").style.display = "none";
+            document.getElementById("step1").style.display = "block";
+            setProgress(0);
+        }
+
+        function restartAll() {
+            currentIncident = "";
+            photoData = null;
+            coords = null;
+            document.getElementById("step3").style.display = "none";
+            document.getElementById("step1").style.display = "block";
+            document.getElementById("img-preview").innerHTML = "";
+            document.getElementById("upload-area").style.display = "";
+            document.querySelectorAll('.option-card').forEach(c => c.classList.remove('checked'));
+            setProgress(0);
+        }
+    </script>
+
+</body>
+</html>
