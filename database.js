@@ -5,7 +5,7 @@
  */
 
 const SUPABASE_URL = "https://oljqkkyikylvpkjxdwlc.supabase.co";
-const SUPABASE_KEY = "sb_publishable_Lylc13J-nkST-K7FEndY9g_ld0keudU";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9sanFra3lpa3lsdnBranhkd2xjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYyNzkyNjgsImV4cCI6MjA5MTg1NTI2OH0.gYnVw-JSAyRgeblMk45KZJb2knvJB1900ESDLRn7p1E";
 
 // Importamos Supabase vía CDN (ESM)
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
