@@ -1051,18 +1051,41 @@
 
             filtered.forEach(r => {
                 const typeInfo = TYPES[r.type] || { color: '#38bdf8', label: r.type };
-                L.circleMarker([r.coords.lat, r.coords.lng], {
-                    radius: 6,
+                const marker = L.circleMarker([r.coords.lat, r.coords.lng], {
+                    radius: 8,
                     fillColor: typeInfo.color,
                     fillOpacity: 0.8,
                     color: typeInfo.color,
-                    weight: 1,
-                    opacity: 0.5
-                }).bindPopup(`
-                    <strong style="color:${typeInfo.color}">${typeInfo.label}</strong><br>
-                    <small>${r.effects ? r.effects.join(', ') : ''}</small><br>
-                    <small style="opacity:0.7">${formatDateTime(r.timestamp)}</small>
-                `).addTo(map);
+                    weight: 2,
+                    opacity: 1
+                });
+                
+                let popupContent = `
+                    <div style="font-family:'Inter',sans-serif; min-width:180px; padding:4px; color:#1e293b;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                            <div style="width:12px; height:12px; border-radius:50%; background:${typeInfo.color};"></div>
+                            <strong style="font-size:1.1em; color:#0f172a;">${typeInfo.label}</strong>
+                        </div>
+                        <div style="color:#64748b; font-size:0.85em; margin-bottom:10px;">
+                            ${formatDateTime(r.timestamp)}
+                        </div>
+                `;
+                
+                if (r.photoURL) {
+                    popupContent += `
+                        <div style="cursor:pointer; position:relative; overflow:hidden; border-radius:10px;" onclick="openPhoto('${r.photoURL}')">
+                            <img src="${r.photoURL}" style="width:100%; display:block; transition:0.3s;">
+                            <div style="position:absolute; inset:0; background:rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:center; opacity:0; transition:0.3s;" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0">
+                                <span style="color:white; font-size:0.8em; font-weight:600;">Ver grande</span>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    popupContent += `<p style="margin:4px 0; font-size:0.9em; color:#94a3b8; font-style:italic;">Sin evidencia fotográfica</p>`;
+                }
+                
+                popupContent += `</div>`;
+                marker.bindPopup(popupContent, { maxWidth: 220 }).addTo(map);
             });
 
             // Ajustar automáticamente los límites (zoom) si hay puntos

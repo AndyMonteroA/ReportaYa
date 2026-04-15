@@ -253,6 +253,10 @@
             width: 16px;
             height: 16px;
         }
+        /* Ocultar elementos fantasma en móviles */
+        @media (max-width: 480px) {
+            .nav-dashboard { display: none !important; }
+        }
         .header-logo {
             display: flex;
             align-items: center;
@@ -767,10 +771,6 @@
 
     <!-- ===== HEADER ===== -->
     <header>
-        <a href="dashboard.html" class="nav-dashboard" title="Centro de Monitoreo">
-            <i data-lucide="activity"></i>
-            <span>Monitoreo</span>
-        </a>
         <div class="header-logo">
             <div class="header-logo-icon">
                 <i data-lucide="shield-alert"></i>
@@ -881,7 +881,7 @@
 
             <button class="btn-main" onclick="submitReport()" id="btn-submit">
                 <i data-lucide="send"></i>
-                Enviar reporte
+                Enviar Reporte
             </button>
             <button class="btn-back" onclick="restartAll()">
                 <i data-lucide="rotate-ccw"></i>
@@ -1092,7 +1092,7 @@
             navigator.geolocation.getCurrentPosition(
                 pos => {
                     coords = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
-                    el.innerHTML = `<i data-lucide="map-pin-check"></i> Ubicación capturada (${coords.lat}, ${coords.lng})`;
+                    el.innerHTML = `<i data-lucide="map-pin-check"></i> Ubicación obtenida`;
                     el.className = "location-status success";
                     lucide.createIcons({ nodes: [el] });
                 },
