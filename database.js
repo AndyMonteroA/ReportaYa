@@ -112,7 +112,7 @@ export const ReportaData = {
 
             if (error) throw error;
 
-            console.log("Reporte guardado en Supabase con éxito");
+            console.log("Incidente guardado en Supabase con éxito");
             return { success: true };
         } catch (e) {
             console.error("Error guardando en Supabase:", e);

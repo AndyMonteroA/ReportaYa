@@ -1154,7 +1154,7 @@
                 const result = await ReportaData.saveReport(report);
 
                 if (result.success) {
-                    showToast("¡Reporte enviado exitosamente!");
+                    showToast("¡Incidente enviado exitosamente!");
                     setTimeout(() => restartAll(), 2000);
                 } else {
                     throw new Error(result.error);
