@@ -1,52 +1,17 @@
 /**
- * ReportaYa - Capa de Servicio de Datos (Service Layer)
- * Este archivo centraliza la comunicación con la base de datos (Firebase)
- * y permite cambiar de proveedor fácilmente en el futuro.
+ * ReportaYa - Capa de Servicio de Datos (Service Layer) con SUPABASE
+ * Este archivo centraliza la comunicación con la base de datos y el almacenamiento.
+ * Versión: Migración a Supabase (100% Gratis y Profesional)
  */
 
-// NOTA: Estas son configuraciones temporales. 
-// El usuario deberá reemplazarlas con sus propias claves de Firebase Console.
-const firebaseConfig = {
-    apiKey: "AIzaSyAcX0KhB7M7XDiDO7RNQMvmeeNBzzQnyrw",
-    authDomain: "reportaya-babahoyo.firebaseapp.com",
-    projectId: "reportaya-babahoyo",
-    storageBucket: "reportaya-babahoyo.firebasestorage.app",
-    messagingSenderId: "814206925356",
-    appId: "1:814206925356:web:6f0980d30b7b79714aaf89",
-    measurementId: "G-TL0G7758QB"
-};
+const SUPABASE_URL = "https://oljqkkyikylvpkjxdwlc.supabase.co";
+const SUPABASE_KEY = "sb_publishable_Lylc13J-nkST-K7FEndY9g_ld0keudU";
 
-// Importamos lo necesario de Firebase vía CDN
-import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-app.js";
-import { 
-    getFirestore, 
-    collection, 
-    addDoc, 
-    onSnapshot, 
-    query, 
-    orderBy, 
-    serverTimestamp 
-} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
-import { 
-    getStorage, 
-    ref, 
-    uploadBytes, 
-    getDownloadURL 
-} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js";
+// Importamos Supabase vía CDN (ESM)
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// Inicializamos Firebase
-let db, storage;
-let isFirebaseReady = false;
-
-try {
-    const app = initializeApp(firebaseConfig);
-    db = getFirestore(app);
-    storage = getStorage(app);
-    isFirebaseReady = true;
-    console.log("Servicio de Datos: Firebase + Storage inicializados");
-} catch (e) {
-    console.warn("Servicio de Datos: Error al inicializar Firebase.", e);
-}
+// Inicializamos Supabase
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
  * Utilidad para comprimir imágenes en el cliente (Canvas)
@@ -84,61 +49,74 @@ const ImageCompressor = {
 };
 
 /**
- * Interfaz de Datos de ReportaYa
+ * Interfaz de Datos de ReportaYa - Motor Supabase
  */
 export const ReportaData = {
     
     /**
-     * Sube un archivo a Firebase Storage
+     * Sube un archivo a Supabase Storage
      * @param {File} file - Archivo original
      * @returns {Promise<string>} URL de la foto subida
      */
     async uploadFile(file) {
-        if (!isFirebaseReady) return null;
         try {
             // 1. Comprimir antes de subir
             const compressedBlob = await ImageCompressor.compress(file);
-            
-            // 2. Crear ruta única
-            const fileName = `evidencias/${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
-            const storageRef = ref(storage, fileName);
-            
-            // 3. Subir
-            await uploadBytes(storageRef, compressedBlob);
-            
-            // 4. Obtener URL
-            const url = await getDownloadURL(storageRef);
-            return url;
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+
+            // 2. Subir a Supabase Storage (Bucket: evidencias)
+            const { data, error } = await supabase.storage
+                .from('evidencias')
+                .upload(fileName, compressedBlob, {
+                    contentType: 'image/jpeg'
+                });
+
+            if (error) throw error;
+
+            // 3. Obtener URL pública
+            const { data: urlData } = supabase.storage
+                .from('evidencias')
+                .getPublicUrl(fileName);
+
+            return urlData.publicUrl;
         } catch (e) {
-            console.error("Error al subir archivo:", e);
+            console.error("Error al subir archivo a Supabase:", e);
             return null;
         }
     },
 
     /**
-     * Guarda un nuevo reporte en la base de datos (y localmente como respaldo)
-     * @param {Object} reportData - Datos del reporte (tipo, coordenadas, efectos, etc)
+     * Guarda un nuevo reporte en Supabase
+     * @param {Object} reportData - Datos del reporte
      */
     async saveReport(reportData) {
-        // 1. Guardar localmente siempre (Respaldo/Modo Offline)
+        // Guardar localmente siempre (Respaldo)
         this._saveToLocal(reportData);
 
-        // 2. Intentar guardar en Firebase si está configurado
-        if (isFirebaseReady) {
-            try {
-                const docRef = await addDoc(collection(db, "reportes"), {
-                    ...reportData,
-                    created_at: serverTimestamp() // Marca de tiempo del servidor
-                });
-                console.log("Reporte guardado en Firebase con ID:", docRef.id);
-                return { success: true, id: docRef.id };
-            } catch (e) {
-                console.error("Error guardando en Firebase:", e);
-                return { success: false, error: e.message };
-            }
-        } else {
-            console.info("Reporte guardado solo localmente (Firebase no configurado)");
-            return { success: true, local: true };
+        try {
+            // Mapeo a campos en ESPAÑOL para la base de datos
+            const payload = {
+                id: reportData.id,
+                fecha_texto: reportData.timestamp,
+                tipo: reportData.type,
+                tipo_nombre: reportData.typeLabel,
+                efectos: reportData.effects,
+                coordenadas: reportData.coords,
+                url_foto: reportData.photoURL,
+                tiene_foto: reportData.hasPhoto
+            };
+
+            const { data, error } = await supabase
+                .from('reportes')
+                .insert([payload]);
+
+            if (error) throw error;
+
+            console.log("Reporte guardado en Supabase con éxito");
+            return { success: true };
+        } catch (e) {
+            console.error("Error guardando en Supabase:", e);
+            return { success: false, error: e.message };
         }
     },
 
@@ -147,19 +125,42 @@ export const ReportaData = {
      * @param {Function} callback - Función que recibe la lista actualizada de reportes
      */
     onReportsUpdate(callback) {
-        if (isFirebaseReady) {
-            const q = query(collection(db, "reportes"), orderBy("timestamp", "desc"));
-            return onSnapshot(q, (snapshot) => {
-                const reports = [];
-                snapshot.forEach((doc) => {
-                    reports.push({ id: doc.id, ...doc.data() });
-                });
-                callback(reports);
-            });
+        // 1. Cargar datos iniciales
+        this._fetchInitialReports(callback);
+
+        // 2. Suscribirse a cambios en tiempo real
+        return supabase
+            .channel('cambios-reales')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'reportes' }, () => {
+                this._fetchInitialReports(callback);
+            })
+            .subscribe();
+    },
+
+    /**
+     * Función interna para cargar los reportes actuales
+     */
+    async _fetchInitialReports(callback) {
+        const { data, error } = await supabase
+            .from('reportes')
+            .select('*')
+            .order('fecha_creacion', { ascending: false });
+
+        if (!error && data) {
+            // Re-mapeo a formato original para no romper la UI
+            const formatted = data.map(r => ({
+                id: r.id,
+                timestamp: r.fecha_texto,
+                type: r.tipo,
+                typeLabel: r.tipo_nombre,
+                effects: r.efectos,
+                coords: r.coordenadas,
+                photoURL: r.url_foto,
+                hasPhoto: r.tiene_foto
+            }));
+            callback(formatted);
         } else {
-            const localData = JSON.parse(localStorage.getItem('reportaya_db') || '[]');
-            callback(localData);
-            return () => {};
+            console.error("Error cargando reportes iniciales:", error);
         }
     },
 
