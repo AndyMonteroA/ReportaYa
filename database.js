@@ -7,12 +7,13 @@
 // NOTA: Estas son configuraciones temporales. 
 // El usuario deberá reemplazarlas con sus propias claves de Firebase Console.
 const firebaseConfig = {
-    apiKey: "TU_API_KEY",
-    authDomain: "tu-proyecto.firebaseapp.com",
-    projectId: "tu-proyecto",
-    storageBucket: "tu-proyecto.appspot.com",
-    messagingSenderId: "tu-id",
-    appId: "tu-app-id"
+    apiKey: "AIzaSyAcX0KhB7M7XDiDO7RNQMvmeeNBzzQnyrw",
+    authDomain: "reportaya-babahoyo.firebaseapp.com",
+    projectId: "reportaya-babahoyo",
+    storageBucket: "reportaya-babahoyo.firebasestorage.app",
+    messagingSenderId: "814206925356",
+    appId: "1:814206925356:web:6f0980d30b7b79714aaf89",
+    measurementId: "G-TL0G7758QB"
 };
 
 // Importamos lo necesario de Firebase vía CDN
