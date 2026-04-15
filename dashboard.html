@@ -588,9 +588,65 @@
             .stats-row { grid-template-columns: 1fr 1fr; gap: 8px; }
             .stat-card { padding: 12px; flex-direction: column; gap: 8px; }
             .stat-value { font-size: 1.3em; }
-            #heatmap { height: 260px; }
-            .dash-main { padding: 12px; }
-        }
+             .dash-main { padding: 12px; }
+         }
+
+         /* ===== MODAL DE FOTO ===== */
+         .photo-modal {
+             position: fixed;
+             inset: 0;
+             background: rgba(0,0,0,0.9);
+             z-index: 10000;
+             display: none;
+             align-items: center;
+             justify-content: center;
+             padding: 20px;
+             backdrop-filter: blur(8px);
+         }
+         .photo-modal.show { display: flex; }
+         .photo-modal-content {
+             max-width: 90%;
+             max-height: 90vh;
+             position: relative;
+         }
+         .photo-modal-content img {
+             max-width: 100%;
+             max-height: 85vh;
+             border-radius: 12px;
+             box-shadow: 0 0 40px rgba(0,0,0,0.5);
+             border: 2px solid var(--border);
+         }
+         .close-modal {
+             position: absolute;
+             top: -50px;
+             right: 0;
+             background: white;
+             color: black;
+             width: 40px;
+             height: 40px;
+             border-radius: 50%;
+             display: flex;
+             align-items: center;
+             justify-content: center;
+             cursor: pointer;
+             border: none;
+             font-weight: bold;
+         }
+
+         .btn-view-photo {
+             background: var(--bg-secondary);
+             border: 1px solid var(--border);
+             color: var(--accent-cyan);
+             padding: 6px 12px;
+             border-radius: 8px;
+             font-size: 0.85em;
+             display: flex;
+             align-items: center;
+             gap: 6px;
+             cursor: pointer;
+             transition: 0.2s;
+         }
+         .btn-view-photo:hover { background: var(--bg-card-hover); border-color: var(--accent-cyan); }
         /* ===== PANTALLA DE BLOQUEO (SEGURIDAD) ===== */
         .auth-overlay {
             position: fixed;
@@ -670,6 +726,14 @@
     </div>
 
     <div id="dashboard-content" class="blur-content">
+        <!-- MODAL DE IMAGEN -->
+        <div id="photo-modal" class="photo-modal" onclick="closePhoto()">
+            <div class="photo-modal-content" onclick="event.stopPropagation()">
+                <button class="close-modal" onclick="closePhoto()">×</button>
+                <div id="photo-container"></div>
+            </div>
+        </div>
+
         <!-- CABECERA -->
         <header class="dash-header">
         <div class="header-left">
@@ -1105,7 +1169,13 @@
                         </td>
                         <td>${r.effects ? r.effects.join(', ') : '—'}</td>
                         <td><span class="coords-text">${r.coords ? `${r.coords.lat}, ${r.coords.lng}` : 'No capturada'}</span></td>
-                        <td>${r.hasPhoto ? '<i data-lucide="image" style="width:16px;height:16px;color:var(--accent-green)"></i>' : '<span style="color:var(--text-muted)">—</span>'}</td>
+                        <td>
+                            ${r.photoURL ? 
+                                `<button class="btn-view-photo" onclick="openPhoto('${r.photoURL}')">
+                                    <i data-lucide="image"></i> Ver foto
+                                 </button>` : 
+                                '<span style="color:var(--text-muted)">—</span>'}
+                        </td>
                         <td style="white-space:nowrap; color:var(--text-secondary);">${formatDateTime(r.timestamp)}</td>
                     </tr>
                 `;
@@ -1194,10 +1264,24 @@
             return `${days}d`;
         }
 
+        // ===== FUNCIONES DE FOTO =====
+        function openPhoto(url) {
+            const modal = document.getElementById('photo-modal');
+            const container = document.getElementById('photo-container');
+            container.innerHTML = `<img src="${url}" alt="Evidencia">`;
+            modal.classList.add('show');
+        }
+
+        function closePhoto() {
+            document.getElementById('photo-modal').classList.remove('show');
+        }
+
         // Exportar a window para compatibilidad con HTML (onclick)
         window.generateDemoData = generateDemoData;
         window.clearAllData = clearAllData;
         window.setFilter = setFilter;
+        window.openPhoto = openPhoto;
+        window.closePhoto = closePhoto;
     </script>
 
 </body>

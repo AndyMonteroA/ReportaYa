@@ -1011,7 +1011,8 @@
         };
 
         let currentIncident = "";
-        let photoData = null;
+        let selectedFile = null; // Guardará el archivo real
+        let photoPreview = null; // Guardará la miniatura local
         let coords = null;
 
         // ===== PASO 1 =====
@@ -1108,10 +1109,11 @@
         function showPreview() {
             const file = document.getElementById("foto").files[0];
             if (file) {
+                selectedFile = file;
                 const reader = new FileReader();
                 reader.onload = e => {
-                    photoData = e.target.result;
-                    document.getElementById("img-preview").innerHTML = `<img src="${photoData}" alt="Evidencia fotográfica">`;
+                    photoPreview = e.target.result;
+                    document.getElementById("img-preview").innerHTML = `<img src="${photoPreview}" alt="Evidencia fotográfica">`;
                     document.getElementById("upload-area").style.display = "none";
                 };
                 reader.readAsDataURL(file);
@@ -1120,30 +1122,53 @@
 
         // ===== ENVIAR REPORTE =====
         async function submitReport() {
-            const effects = Array.from(document.querySelectorAll("#checks-container input:checked")).map(i => i.value);
+            const btn = document.getElementById("btn-submit");
+            const originalHTML = btn.innerHTML;
+            
+            // 1. Mostrar estado de carga
+            btn.disabled = true;
+            btn.innerHTML = '<i data-lucide="loader-2" class="spin"></i> Enviando...';
+            lucide.createIcons({ nodes: [btn] });
 
-            // Construir objeto de reporte estructurado
-            const report = {
-                id: crypto.randomUUID(),
-                timestamp: new Date().toISOString(),
-                type: currentIncident,
-                typeLabel: incidents[currentIncident].desc,
-                effects: effects,
-                coords: coords ? { lat: parseFloat(coords.lat), lng: parseFloat(coords.lng) } : null,
-                hasPhoto: !!photoData
-            };
+            try {
+                let photoURL = null;
+                // 2. Subir foto si existe
+                if (selectedFile) {
+                    btn.innerHTML = '<i data-lucide="upload" class="spin"></i> Subiendo foto...';
+                    lucide.createIcons({ nodes: [btn] });
+                    photoURL = await ReportaData.uploadFile(selectedFile);
+                }
 
-            // Guardar usando la Capa de Servicio (Firebase + Local)
-            const result = await ReportaData.saveReport(report);
+                const effects = Array.from(document.querySelectorAll("#checks-container input:checked")).map(i => i.value);
 
-            if (result.success) {
-                showToast("¡Reporte enviado con éxito!");
-            } else {
-                showToast("Guardado localmente (Pérdida de conexión)");
+                // 3. Construir objeto de reporte
+                const report = {
+                    id: crypto.randomUUID(),
+                    timestamp: new Date().toISOString(),
+                    type: currentIncident,
+                    typeLabel: incidents[currentIncident].desc,
+                    effects: effects,
+                    coords: coords ? { lat: parseFloat(coords.lat), lng: parseFloat(coords.lng) } : null,
+                    photoURL: photoURL,
+                    hasPhoto: !!photoURL
+                };
+
+                // 4. Guardar en Base de Datos
+                const result = await ReportaData.saveReport(report);
+
+                if (result.success) {
+                    showToast("¡Reporte enviado exitosamente!");
+                    setTimeout(() => restartAll(), 2000);
+                } else {
+                    throw new Error(result.error);
+                }
+            } catch (e) {
+                console.error(e);
+                showToast("Error al enviar. Se guardó copia local.");
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                lucide.createIcons({ nodes: [btn] });
             }
-
-            console.log("Resultado del guardado:", result);
-            setTimeout(() => restartAll(), 2500);
         }
 
         // Exponer funciones necesarias al objeto window para mantener compatibilidad con onclick
@@ -1174,8 +1199,12 @@
 
         function restartAll() {
             currentIncident = "";
-            photoData = null;
+            selectedFile = null;
+            photoPreview = null;
             coords = null;
+            document.getElementById("btn-submit").disabled = false;
+            document.getElementById("btn-submit").innerHTML = '<i data-lucide="send"></i> Enviar reporte';
+            lucide.createIcons({ nodes: [document.getElementById("btn-submit")] });
             document.getElementById("step3").style.display = "none";
             document.getElementById("step1").style.display = "block";
             document.getElementById("img-preview").innerHTML = "";

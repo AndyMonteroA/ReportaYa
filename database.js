@@ -27,25 +27,94 @@ import {
     orderBy, 
     serverTimestamp 
 } from "https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore.js";
+import { 
+    getStorage, 
+    ref, 
+    uploadBytes, 
+    getDownloadURL 
+} from "https://www.gstatic.com/firebasejs/9.22.1/firebase-storage.js";
 
 // Inicializamos Firebase
-let db;
+let db, storage;
 let isFirebaseReady = false;
 
 try {
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
+    storage = getStorage(app);
     isFirebaseReady = true;
-    console.log("Servicio de Datos: Firebase inicializado (Esperando configuración real)");
+    console.log("Servicio de Datos: Firebase + Storage inicializados");
 } catch (e) {
-    console.warn("Servicio de Datos: Firebase no pudo inicializarse. Usando solo almacenamiento local.", e);
+    console.warn("Servicio de Datos: Error al inicializar Firebase.", e);
 }
+
+/**
+ * Utilidad para comprimir imágenes en el cliente (Canvas)
+ */
+const ImageCompressor = {
+    async compress(file, maxWidth = 1000, quality = 0.7) {
+        return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > maxWidth) {
+                        height = (maxWidth / width) * height;
+                        width = maxWidth;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    canvas.toBlob((blob) => {
+                        resolve(blob);
+                    }, 'image/jpeg', quality);
+                };
+            };
+        });
+    }
+};
 
 /**
  * Interfaz de Datos de ReportaYa
  */
 export const ReportaData = {
     
+    /**
+     * Sube un archivo a Firebase Storage
+     * @param {File} file - Archivo original
+     * @returns {Promise<string>} URL de la foto subida
+     */
+    async uploadFile(file) {
+        if (!isFirebaseReady) return null;
+        try {
+            // 1. Comprimir antes de subir
+            const compressedBlob = await ImageCompressor.compress(file);
+            
+            // 2. Crear ruta única
+            const fileName = `evidencias/${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+            const storageRef = ref(storage, fileName);
+            
+            // 3. Subir
+            await uploadBytes(storageRef, compressedBlob);
+            
+            // 4. Obtener URL
+            const url = await getDownloadURL(storageRef);
+            return url;
+        } catch (e) {
+            console.error("Error al subir archivo:", e);
+            return null;
+        }
+    },
+
     /**
      * Guarda un nuevo reporte en la base de datos (y localmente como respaldo)
      * @param {Object} reportData - Datos del reporte (tipo, coordenadas, efectos, etc)
@@ -55,7 +124,7 @@ export const ReportaData = {
         this._saveToLocal(reportData);
 
         // 2. Intentar guardar en Firebase si está configurado
-        if (isFirebaseReady && firebaseConfig.apiKey !== "TU_API_KEY") {
+        if (isFirebaseReady) {
             try {
                 const docRef = await addDoc(collection(db, "reportes"), {
                     ...reportData,
@@ -78,8 +147,7 @@ export const ReportaData = {
      * @param {Function} callback - Función que recibe la lista actualizada de reportes
      */
     onReportsUpdate(callback) {
-        // Si Firebase está listo, usamos tiempo real real
-        if (isFirebaseReady && firebaseConfig.apiKey !== "TU_API_KEY") {
+        if (isFirebaseReady) {
             const q = query(collection(db, "reportes"), orderBy("timestamp", "desc"));
             return onSnapshot(q, (snapshot) => {
                 const reports = [];
@@ -89,11 +157,9 @@ export const ReportaData = {
                 callback(reports);
             });
         } else {
-            // Si no hay Firebase, leemos del LocalStorage una vez
-            console.info("Cargando reportes desde LocalStorage (Sin tiempo real de servidor)");
             const localData = JSON.parse(localStorage.getItem('reportaya_db') || '[]');
             callback(localData);
-            return () => {}; // Función de limpieza vacía
+            return () => {};
         }
     },
 
