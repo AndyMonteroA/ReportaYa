@@ -881,7 +881,7 @@
                 Capturando ubicación...
             </div>
 
-            <button class="btn-main" onclick="submitReport()" id="btn-submit">
+            <button class="btn-main" onclick="submitReport()" id="btn-submit" disabled>
                 <i data-lucide="send"></i>
                 Enviar Datos
             </button>
@@ -1090,6 +1090,7 @@
                     coords = { lat: pos.coords.latitude.toFixed(6), lng: pos.coords.longitude.toFixed(6) };
                     el.innerHTML = `<i data-lucide="map-pin-check"></i> Ubicación obtenida`;
                     el.className = "location-status success";
+                    document.getElementById("btn-submit").disabled = false;
                     lucide.createIcons({ nodes: [el] });
                 },
                 () => {
@@ -1199,7 +1200,7 @@
             selectedFile = null;
             photoPreview = null;
             coords = null;
-            document.getElementById("btn-submit").disabled = false;
+            document.getElementById("btn-submit").disabled = true;
             document.getElementById("btn-submit").innerHTML = '<i data-lucide="send"></i> Enviar Datos';
             lucide.createIcons({ nodes: [document.getElementById("btn-submit")] });
             document.getElementById("step3").style.display = "none";
