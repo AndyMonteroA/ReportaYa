@@ -591,12 +591,87 @@
             #heatmap { height: 260px; }
             .dash-main { padding: 12px; }
         }
+        /* ===== PANTALLA DE BLOQUEO (SEGURIDAD) ===== */
+        .auth-overlay {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-primary);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .auth-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 32px 64px rgba(0,0,0,0.6);
+        }
+        .auth-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(6, 182, 212, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+        }
+        .auth-icon i { color: var(--accent-cyan); width: 32px; height: 32px; }
+        .auth-card h2 { margin: 0 0 8px; font-size: 1.5em; }
+        .auth-card p { color: var(--text-secondary); font-size: 0.9em; margin-bottom: 24px; }
+        .pin-group {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .pin-input {
+            width: 50px;
+            height: 60px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: white;
+            outline: none;
+        }
+        .pin-input:focus { border-color: var(--accent-cyan); background: var(--bg-card-hover); }
+        .auth-error { color: var(--accent-red); font-size: 0.82em; margin-top: 12px; display: none; }
+        
+        .blur-content { filter: blur(20px); pointer-events: none; }
     </style>
 </head>
 <body>
 
-    <!-- CABECERA -->
-    <header class="dash-header">
+    <!-- PANTALLA DE ACCESO RESTRINGIDO -->
+    <div id="auth-overlay" class="auth-overlay">
+        <div class="auth-card">
+            <div class="auth-icon">
+                <i data-lucide="lock"></i>
+            </div>
+            <h2>Acceso Restringido</h2>
+            <p>Ingresa el PIN de administrador para ver el panel de monitoreo.</p>
+            <div class="pin-group" id="pin-container">
+                <input type="password" maxlength="1" class="pin-input" autofocus>
+                <input type="password" maxlength="1" class="pin-input">
+                <input type="password" maxlength="1" class="pin-input">
+                <input type="password" maxlength="1" class="pin-input">
+            </div>
+            <div id="auth-error" class="auth-error">PIN incorrecto. Intenta de nuevo.</div>
+        </div>
+    </div>
+
+    <div id="dashboard-content" class="blur-content">
+        <!-- CABECERA -->
+        <header class="dash-header">
         <div class="header-left">
             <div class="header-logo">
                 <i data-lucide="activity"></i>
@@ -743,6 +818,8 @@
     <script type="module">
         import { ReportaData } from './database.js';
 
+        const ADMIN_PIN = "2026";
+
         // ===== CONFIGURACIÓN DE TIPOS DE INCIDENCIA =====
         const TYPES = {
             inundacion:    { label: 'Inundación',    icon: 'waves',           color: '#38bdf8' },
@@ -759,14 +836,68 @@
         // ===== INICIALIZACIÓN =====
         document.addEventListener('DOMContentLoaded', () => {
             lucide.createIcons();
-            initMap();
             
+            // Verificar si ya está autenticado en esta sesión
+            if (sessionStorage.getItem('reportaya_admin_auth') === 'true') {
+                unlockDashboard();
+            } else {
+                initAuthLogic();
+            }
+        });
+
+        function initAuthLogic() {
+            const inputs = document.querySelectorAll('.pin-input');
+            const errorMsg = document.getElementById('auth-error');
+
+            inputs.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value && index < inputs.length - 1) {
+                        inputs[index + 1].focus();
+                    }
+                    
+                    const pin = Array.from(inputs).map(i => i.value).join('');
+                    if (pin.length === 4) {
+                        if (pin === ADMIN_PIN) {
+                            unlockDashboard();
+                        } else {
+                            errorMsg.style.display = 'block';
+                            inputs.forEach(i => {
+                                i.value = '';
+                                i.style.borderColor = 'var(--accent-red)';
+                            });
+                            inputs[0].focus();
+                            setTimeout(() => {
+                                inputs.forEach(i => i.style.borderColor = 'var(--border)');
+                            }, 1000);
+                        }
+                    }
+                });
+
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                        inputs[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        function unlockDashboard() {
+            sessionStorage.setItem('reportaya_admin_auth', 'true');
+            document.getElementById('auth-overlay').style.display = 'none';
+            document.getElementById('dashboard-content').classList.remove('blur-content');
+            
+            // Solo cargar datos después de desbloquear
+            initDashboard();
+        }
+
+        function initDashboard() {
+            initMap();
             // Suscribirse a cambios en tiempo real (Firebase o Local)
             ReportaData.onReportsUpdate((reports) => {
                 console.log("Datos recibidos en el Dashboard:", reports);
                 updateDashboardWithData(reports);
             });
-        });
+        }
 
         // Función unificada para actualizar todo el dashboard
         function updateDashboardWithData(reports) {
