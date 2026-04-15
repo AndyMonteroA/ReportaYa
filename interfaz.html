@@ -1164,7 +1164,7 @@
                 }
             } catch (e) {
                 console.error(e);
-                showToast("Error al enviar. Se guardó copia local.");
+                showToast("Error: " + (e.message || "Desconocido"));
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
                 lucide.createIcons({ nodes: [btn] });
