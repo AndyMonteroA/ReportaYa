@@ -401,19 +401,19 @@
             width: 28px;
             height: 28px;
         }
-        /* Colores individuales de iconos */
-        .icon-inundacion { background: rgba(56, 189, 248, 0.15); }
-        .icon-inundacion i[data-lucide] { color: #38bdf8; }
-        .icon-deslizamiento { background: rgba(251, 191, 36, 0.15); }
-        .icon-deslizamiento i[data-lucide] { color: #fbbf24; }
-        .icon-socavamiento { background: rgba(168, 85, 247, 0.15); }
-        .icon-socavamiento i[data-lucide] { color: #a855f7; }
-        .icon-colapso { background: rgba(239, 68, 68, 0.15); }
-        .icon-colapso i[data-lucide] { color: #ef4444; }
-        .icon-vendaval { background: rgba(34, 197, 94, 0.15); }
-        .icon-vendaval i[data-lucide] { color: #22c55e; }
-        .icon-aluvion { background: rgba(249, 115, 22, 0.15); }
-        .icon-aluvion i[data-lucide] { color: #f97316; }
+        /* Colores individuales de iconos adaptados para fondo crema */
+        .icon-inundacion { background: rgba(2, 132, 199, 0.15); }
+        .icon-inundacion i[data-lucide] { color: #0284c7; } /* Cyan oscuro */
+        .icon-deslizamiento { background: rgba(180, 83, 9, 0.15); }
+        .icon-deslizamiento i[data-lucide] { color: #b45309; } /* Ámbar oscuro */
+        .icon-socavamiento { background: rgba(109, 40, 217, 0.15); }
+        .icon-socavamiento i[data-lucide] { color: #6d28d9; } /* Morado oscuro */
+        .icon-colapso { background: rgba(185, 28, 28, 0.15); }
+        .icon-colapso i[data-lucide] { color: #b91c1c; } /* Rojo oscuro */
+        .icon-vendaval { background: rgba(15, 118, 110, 0.15); }
+        .icon-vendaval i[data-lucide] { color: #0f766e; } /* Teal oscuro */
+        .icon-aluvion { background: rgba(194, 65, 12, 0.15); }
+        .icon-aluvion i[data-lucide] { color: #c2410c; } /* Naranja oscuro */
 
         .card-text {
             flex: 1;
@@ -1060,42 +1060,42 @@
         const incidents = {
             inundacion: {
                 icon: 'waves',
-                color: '#38bdf8',
+                color: '#0284c7',
                 efectos: ["Agua en casas o calles", "Ríos/esteros desbordados", "Personas atrapadas", "Vehículos dañados", "Caminos inundados"],
                 desc: "Inundación",
                 action: "Evacuar a zonas altas, no cruzar agua, llamar 911."
             },
             deslizamiento: {
                 icon: 'mountain-snow',
-                color: '#fbbf24',
+                color: '#b45309',
                 efectos: ["Tierra o piedras cayendo", "Grietas en el suelo", "Árboles/postes caídos", "Vía bloqueada"],
                 desc: "Deslizamiento",
                 action: "Evacuar ya, no acercarse, ECU911."
             },
             socavamiento: {
                 icon: 'circle-off',
-                color: '#a855f7',
+                color: '#6d28d9',
                 efectos: ["Hueco grande en calle", "Asfalto hundido", "Vehículo atrapado"],
                 desc: "Socavamiento",
                 action: "Señalizar, no acercarse, reportar vial/911."
             },
             colapso: {
                 icon: 'building-2',
-                color: '#ef4444',
+                color: '#b91c1c',
                 efectos: ["Pared/techo agrietado", "Casa inclinada", "Personas bajo escombros"],
                 desc: "Colapso estructural",
                 action: "Salir inmediatamente, Bomberos/911."
             },
             vendaval: {
                 icon: 'wind',
-                color: '#22c55e',
+                color: '#0f766e',
                 efectos: ["Techos volados", "Árboles caídos", "Cortes de luz"],
                 desc: "Vendaval",
                 action: "Quedarse en casa segura, alejar de ventanas."
             },
             aluvion: {
                 icon: 'cloud-rain-wind',
-                color: '#f97316',
+                color: '#c2410c',
                 efectos: ["Lodo/piedras bajando rápido", "Arrastre de objetos", "Ruido fuerte"],
                 desc: "Aluvión",
                 action: "Subir a terreno alto YA."
