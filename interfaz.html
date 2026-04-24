@@ -7,21 +7,23 @@
     <meta name="description" content="Reporta incidencias de temporada invernal de forma rápida y geolocalizada.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
+        /* ===== ESTILOS BASE Y FUENTES ===== */
+        /* Utilizamos la tipografía premium Outfit para mejor legibilidad en móviles */
         *, *::before, *::after {
             box-sizing: border-box;
         }
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-family: 'Outfit', system-ui, -apple-system, sans-serif;
             margin: 0;
             padding: 0;
             padding-top: env(safe-area-inset-top);
             padding-bottom: env(safe-area-inset-bottom);
             padding-left: env(safe-area-inset-left);
             padding-right: env(safe-area-inset-right);
-            background: #0a0f1e;
+            background: #0a0f1e; /* Fondo global azul noche oscuro */
             color: #e2e8f0;
             min-height: 100vh;
             min-height: 100dvh;
@@ -217,13 +219,18 @@
             color: #94a3b8;
         }
 
-        /* ===== CABECERA ===== */
+        /* ===== CABECERA PRINCIPAL (Glassmorphism) ===== */
+        /* Efecto cristal translúcido que permite ver el contenido al hacer scroll */
         header {
-            background: linear-gradient(180deg, #111827, #0a0f1e);
+            background: rgba(10, 15, 30, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             padding: 28px 16px 24px;
             text-align: center;
-            border-bottom: 1px solid rgba(56, 189, 248, 0.1);
-            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         .nav-dashboard {
             position: absolute;
@@ -337,15 +344,16 @@
             font-weight: 700;
         }
 
-        /* ===== TARJETAS PASO 1 ===== */
+        /* ===== TARJETAS PASO 1 (Tipos de Emergencia - Diseño Crema) ===== */
+        /* Superficies de color crema para descansar la vista en el formulario */
         .option-card {
             display: flex;
             align-items: center;
-            background: linear-gradient(145deg, #151d35, #131a2e);
+            background: #F8F5EF; 
             border-radius: 16px;
             padding: 20px;
             margin: 14px 0;
-            border: 1px solid #1e293b;
+            border: 1px solid #E4DECE;
             transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
             cursor: pointer;
             position: relative;
@@ -416,24 +424,25 @@
             font-size: 1.1em;
             font-weight: 600;
             display: block;
+            color: #1E293B; /* Texto oscuro sobre el fondo crema */
         }
         .label-sub {
             font-size: 0.82em;
-            color: #64748b;
+            color: #475569;
             font-weight: 400;
             display: block;
             margin-top: 2px;
         }
 
-        /* ===== CASILLAS PASO 2 ===== */
+        /* ===== CASILLAS PASO 2 (Efectos Observados - Diseño Crema) ===== */
         .check-item {
             display: flex;
             align-items: center;
-            background: linear-gradient(145deg, #151d35, #131a2e);
+            background: #F8F5EF;
             border-radius: 14px;
             padding: 16px 18px;
             margin: 10px 0;
-            border: 1px solid #1e293b;
+            border: 1px solid #E4DECE;
             cursor: pointer;
             transition: all 0.25s;
             -webkit-tap-highlight-color: transparent;
@@ -444,7 +453,7 @@
         }
         .check-item:hover {
             border-color: rgba(6, 182, 212, 0.4);
-            background: rgba(21, 29, 53, 0.9);
+            background: #F1EBE0; /* Un poco más oscuro al pasar el ratón */
         }
         .check-item input[type="checkbox"] {
             appearance: none;
@@ -479,6 +488,7 @@
             font-size: 1.05em;
             flex: 1;
             font-weight: 500;
+            color: #1E293B; /* Texto oscuro para contraste */
         }
 
         /* ===== BOTONES ===== */
@@ -529,13 +539,14 @@
             height: 20px;
         }
 
-        /* ===== PASO 3 ===== */
+        /* ===== PASO 3 (Resumen Final - Diseño Crema) ===== */
         #summary {
-            background: linear-gradient(145deg, #151d35, #131a2e);
-            border: 1px solid #1e293b;
+            background: #F8F5EF;
+            border: 1px solid #E4DECE;
             border-radius: 16px;
             padding: 24px;
             line-height: 1.8;
+            color: #1E293B;
         }
         #summary .summary-icon {
             display: inline-flex;
@@ -548,8 +559,8 @@
         }
 
         .file-upload-area {
-            background: linear-gradient(145deg, #151d35, #131a2e);
-            border: 2px dashed #1e293b;
+            background: #F8F5EF;
+            border: 2px dashed #E4DECE;
             border-radius: 16px;
             padding: 28px 20px;
             text-align: center;
@@ -560,7 +571,7 @@
         }
         .file-upload-area:hover {
             border-color: rgba(6, 182, 212, 0.4);
-            background: rgba(21, 29, 53, 0.9);
+            background: #F1EBE0;
         }
         .file-upload-area i[data-lucide] {
             width: 36px;
@@ -603,6 +614,8 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
+            background: #F8F5EF; /* Adaptado al tema crema */
+            border: 1px solid #E4DECE;
         }
         .location-status i[data-lucide] {
             width: 20px;
@@ -610,18 +623,18 @@
         }
         .success {
             background: rgba(34, 197, 94, 0.1);
-            color: #22c55e;
-            border: 1px solid rgba(34, 197, 94, 0.2);
+            color: #166534;
+            border-color: rgba(34, 197, 94, 0.3);
         }
         .error {
             background: rgba(239, 68, 68, 0.1);
-            color: #ef4444;
-            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #991b1b;
+            border-color: rgba(239, 68, 68, 0.3);
         }
         .pending-loc {
             background: rgba(56, 189, 248, 0.1);
-            color: #38bdf8;
-            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: #0369a1;
+            border-color: rgba(56, 189, 248, 0.3);
         }
 
         /* ===== NOTIFICACIÓN (TOAST) ===== */
@@ -653,6 +666,70 @@
         .toast i[data-lucide] {
             width: 22px;
             height: 22px;
+        }
+
+        /* ===== PANTALLA ANIMADA DE ÉXITO ===== */
+        /* Aparece al completar el reporte ocupando toda la pantalla */
+        .success-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 15, 30, 0.95);
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+        .success-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .success-icon-wrap {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(6, 182, 212, 0.4);
+            transform: scale(0);
+            transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 30px;
+        }
+        .success-overlay.show .success-icon-wrap {
+            transform: scale(1);
+        }
+        .success-icon-wrap i {
+            width: 60px;
+            height: 60px;
+            color: white;
+        }
+        .success-overlay h2 {
+            font-size: 2.2em;
+            color: white;
+            margin: 0 0 10px;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s ease 0.2s;
+        }
+        .success-overlay p {
+            color: #94a3b8;
+            font-size: 1.1em;
+            text-align: center;
+            max-width: 300px;
+            margin: 0;
+            transform: translateY(20px);
+            opacity: 0;
+            transition: all 0.5s ease 0.3s;
+        }
+        .success-overlay.show h2,
+        .success-overlay.show p {
+            transform: translateY(0);
+            opacity: 1;
         }
 
         /* ===== DISEÑO RESPONSIVO ===== */
@@ -773,6 +850,15 @@
             </button>
             <button class="btn-skip" onclick="skipPermissions()">Continuar sin permisos</button>
         </div>
+    </div>
+
+    <!-- ===== PANTALLA DE ÉXITO ANIMADA ===== -->
+    <div id="success-overlay" class="success-overlay">
+        <div class="success-icon-wrap">
+            <i data-lucide="check"></i>
+        </div>
+        <h2>¡Reporte Enviado!</h2>
+        <p>Las autoridades competentes han sido notificadas y están en camino.</p>
     </div>
 
     <!-- ===== HEADER ===== -->
@@ -1158,8 +1244,16 @@
                 const result = await ReportaData.saveReport(report);
 
                 if (result.success) {
-                    showToast("¡Incidente enviado exitosamente!");
-                    setTimeout(() => restartAll(), 2000);
+                    // Muestra la animación de éxito a pantalla completa
+                    const successScreen = document.getElementById("success-overlay");
+                    successScreen.classList.add("show");
+                    lucide.createIcons({ nodes: [successScreen] });
+                    
+                    // Espera 3.5 segundos antes de reiniciar y cerrar la animación
+                    setTimeout(() => {
+                        successScreen.classList.remove("show");
+                        restartAll();
+                    }, 3500);
                 } else {
                     throw new Error(result.error);
                 }
